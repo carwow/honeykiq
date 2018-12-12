@@ -4,7 +4,6 @@ module Honeykiq
   class PeriodicReporter
     def initialize(honey_client:)
       @honey_client = honey_client
-      @extra = {}
     end
 
     def report(&extra)
