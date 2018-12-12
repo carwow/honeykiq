@@ -14,15 +14,49 @@ gem 'honeykiq'
 
 ## Usage
 
-At the moment the library only provides a periodic reporter which should be
-scheduled to report every few seconds depending on your use case.
+The library provides two use cases:
+
+- [`Honeykiq::ServerMiddleware`]
+- [`Honeykiq::PeriodicReporter`]
+
+[`Honeykiq::ServerMiddleware`]: #HoneykiqServerMiddleware
+[`Honeykiq::PeriodicReporter`]: #HoneykiqPeriodicReporter
+
+### Honeykiq::ServerMiddleware
+
+Add it to Sidekiq server middleware chain and pass a `Libhoney::Client` as
+shown below. It will send an event to Honeycomb once a job finishes or fails.
+Have a look at [server_middleware.rb] to see what kind of information we send.
+
+[server_middleware.rb]: https://github.com/carwow/honeykiq/blob/master/lib/honeykiq/server_middleware.rb
+
+```ruby
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+    chain.add Honeykiq::ServerMiddleware,
+      honey_client: Libhoney::Client.new(
+        writekey: ENV.fetch('HONEYCOMB_WRITE_KEY'),
+        dataset: ENV.fetch('HONEYCOMB_DATASET')
+      )
+  end
+end
+```
+
+**Note on long running jobs:** If you have long running jobs an event is only
+sent to Honeycomb when it finishes so it may appear as no jobs are running.
+Also if the process gets a SIGKILL then no event is sent about that job and the
+job may keep retrying and not appear in Honeycomb. The `PeriodicReporter`
+should help with this but we are thinking of a nicer approach.
 
 ### Honeykiq::PeriodicReporter
 
-The periodic reporter will send one event with information about the sidekiq
-instance, plus one event per sidekiq process, plus one event per sidekiq queue.
-Have a look at [periodic_reporter.rb] to see what kind of information we send
-for each type.
+The periodic reporter should be scheduled to report every few seconds depending
+on your use case (e.g. 30 seconds). Every time the `#report` method is called
+it will send a total of `1 + P + Q` events to Honeycomb where P and Q are the
+number of processes and queues respectively.
+
+It sends three types of events: instance, process, and queue.  Have a look at
+[periodic_reporter.rb] to see what kind of information we send for each type.
 
 [periodic_reporter.rb]: https://github.com/carwow/honeykiq/blob/master/lib/honeykiq/periodic_reporter.rb
 
