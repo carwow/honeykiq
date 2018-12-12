@@ -1,4 +1,3 @@
-require 'honeykiq'
 require 'libhoney'
 
 RSpec.describe Honeykiq::PeriodicReporter do
