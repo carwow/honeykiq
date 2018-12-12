@@ -17,7 +17,7 @@ gem 'honeykiq'
 At the moment the library only provides a periodic reporter which should be
 scheduled to report every few seconds depending on your use case.
 
-### Periodic Reporter
+### Honeykiq::PeriodicReporter
 
 The periodic reporter will send one event with information about the sidekiq
 instance, plus one event per sidekiq process, plus one event per sidekiq queue.
@@ -45,7 +45,7 @@ module SidekiqHealth
   end
 
   def self.reporter
-    @reporter ||= Honeykiq.periodic_reporter(honey_client: honey_client)
+    @reporter ||= Honeykiq::PeriodicReporter.new(honey_client: honey_client)
   end
 
   def self.honey_client
