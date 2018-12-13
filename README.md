@@ -62,7 +62,7 @@ It sends three types of events: instance, process, and queue.  Have a look at
 
 A simple setup using [clockwork] would look like this:
 
-[clockwork]: https://github.com/adamwiggins/clockwork
+[clockwork]: https://github.com/Rykian/clockwork
 
 ```ruby
 require 'clockwork'
