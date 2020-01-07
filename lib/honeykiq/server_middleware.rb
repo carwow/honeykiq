@@ -28,7 +28,7 @@ module Honeykiq
 
     private
 
-    def all_fields(msg, queue_name)
+    def default_fields(msg, queue_name)
       {
         type: :job,
         **job_fields(Sidekiq::Job.new(msg, queue_name)),
@@ -56,8 +56,8 @@ module Honeykiq
     end
 
     def run_event(event, msg, queue_name)
+      event.add(**default_fields(msg, queue_name))
       event.add(**before_fields)
-      event.add(**all_fields(msg, queue_name))
       start_time = Time.now
       yield
       event.add(**after_fields)
