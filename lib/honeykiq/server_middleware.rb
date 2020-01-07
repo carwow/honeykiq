@@ -7,8 +7,8 @@ module Honeykiq
     end
 
     def call(_worker, msg, queue_name)
-      event = @honey_client.event.add(**all_fields(msg, queue_name))
-      duration_ms(event) { yield }
+      event = @honey_client.event
+      run_event(event, msg, queue_name) { yield }
       event.add_field(:'job.status', 'finished')
     rescue StandardError => error
       event&.add_field(:'job.status', 'failed')
@@ -20,13 +20,17 @@ module Honeykiq
 
     private
 
-    def all_fields(msg, queue_name)
+    def before_fields(msg, queue_name)
       {
         type: :job,
         **job_fields(Sidekiq::Job.new(msg, queue_name)),
         **queue_fields(Sidekiq::Queue.new(queue_name)),
         'meta.thread_id': Thread.current.object_id
       }
+    end
+
+    def after_fields
+      {}
     end
 
     def job_fields(job)
@@ -47,9 +51,11 @@ module Honeykiq
       }
     end
 
-    def duration_ms(event)
+    def run_event(event, msg, queue_name)
+      event.add(**before_fields(msg, queue_name))
       start_time = Time.now
       yield
+      event.add(**after_fields)
     ensure
       duration = Time.now - start_time
       event.add_field(:duration_ms, duration * 1000)
