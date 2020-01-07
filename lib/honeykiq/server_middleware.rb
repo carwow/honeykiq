@@ -18,19 +18,23 @@ module Honeykiq
       event&.send
     end
 
+    def before_fields
+      {}
+    end
+
+    def after_fields
+      {}
+    end
+
     private
 
-    def before_fields(msg, queue_name)
+    def all_fields(msg, queue_name)
       {
         type: :job,
         **job_fields(Sidekiq::Job.new(msg, queue_name)),
         **queue_fields(Sidekiq::Queue.new(queue_name)),
         'meta.thread_id': Thread.current.object_id
       }
-    end
-
-    def after_fields
-      {}
     end
 
     def job_fields(job)
@@ -52,7 +56,8 @@ module Honeykiq
     end
 
     def run_event(event, msg, queue_name)
-      event.add(**before_fields(msg, queue_name))
+      event.add(**before_fields)
+      event.add(**all_fields(msg, queue_name))
       start_time = Time.now
       yield
       event.add(**after_fields)
