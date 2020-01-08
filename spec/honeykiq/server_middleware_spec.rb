@@ -11,8 +11,13 @@ class TestSidekiqWorker
   end
 end
 
+class TestExtraFields < Honeykiq::ServerMiddleware
+  def extra_fields
+    { extra_data_item: 'foo' }
+  end
+end
+
 RSpec.describe Honeykiq::ServerMiddleware do
-  let(:reporter) { described_class.new(honey_client: honey_client) }
   let(:honey_client) { Libhoney::TestClient.new }
 
   let(:expected_event) do
@@ -23,7 +28,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
       'job.attempt_number': 1,
       'job.id': instance_of(String),
       'job.arguments_bytes': 2,
-      'job.latency_sec': be_within(0.01).of(0),
+      'job.latency_sec': be_within(0.05).of(0),
       'job.status': 'finished',
       'queue.name': 'default',
       'queue.size': be_between(0, 100),
@@ -53,6 +58,24 @@ RSpec.describe Honeykiq::ServerMiddleware do
     TestSidekiqWorker.perform_async
 
     expect(honey_client.events.first.data).to include(expected_event)
+  end
+
+  describe 'adding `extra_fields`' do
+    let(:reporter) { TestExtraFields.new(honey_client: honey_client) }
+    let(:expected_event_keys) { expected_event.keys << :extra_data_item }
+
+    before do
+      Sidekiq::Testing.server_middleware do |chain|
+        chain.add TestExtraFields, honey_client: honey_client
+      end
+    end
+
+    it 'adds the extra keys' do
+      TestSidekiqWorker.perform_async
+
+      expect(honey_client.events.first.data.keys.sort)
+        .to eq(expected_event_keys.sort)
+    end
   end
 
   context 'on error' do

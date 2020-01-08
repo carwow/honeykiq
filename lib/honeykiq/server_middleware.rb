@@ -8,7 +8,7 @@ module Honeykiq
 
     def call(_worker, msg, queue_name)
       event = @honey_client.event
-      run_event(event, msg, queue_name) { yield }
+      run_with_hooks(event, msg, queue_name) { yield }
       event.add_field(:'job.status', 'finished')
     rescue StandardError => error
       event&.add_field(:'job.status', 'failed')
@@ -18,15 +18,17 @@ module Honeykiq
       event&.send
     end
 
-    def before_fields
-      {}
-    end
-
-    def after_fields
+    def extra_fields
       {}
     end
 
     private
+
+    def run_with_hooks(event, msg, queue_name)
+      event.add(default_fields(msg, queue_name))
+      duration_ms(event) { yield }
+      event.add(extra_fields)
+    end
 
     def default_fields(msg, queue_name)
       {
@@ -55,12 +57,9 @@ module Honeykiq
       }
     end
 
-    def run_event(event, msg, queue_name)
-      event.add(**default_fields(msg, queue_name))
-      event.add(**before_fields)
+    def duration_ms(event)
       start_time = Time.now
       yield
-      event.add(**after_fields)
     ensure
       duration = Time.now - start_time
       event.add_field(:duration_ms, duration * 1000)
