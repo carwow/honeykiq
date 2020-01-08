@@ -7,8 +7,8 @@ module Honeykiq
     end
 
     def call(_worker, msg, queue_name)
-      event = @honey_client.event.add(**all_fields(msg, queue_name))
-      duration_ms(event) { yield }
+      event = @honey_client.event
+      run_with_hooks(event, msg, queue_name) { yield }
       event.add_field(:'job.status', 'finished')
     rescue StandardError => error
       event&.add_field(:'job.status', 'failed')
@@ -18,9 +18,19 @@ module Honeykiq
       event&.send
     end
 
+    def extra_fields
+      {}
+    end
+
     private
 
-    def all_fields(msg, queue_name)
+    def run_with_hooks(event, msg, queue_name)
+      event.add(default_fields(msg, queue_name))
+      duration_ms(event) { yield }
+      event.add(extra_fields)
+    end
+
+    def default_fields(msg, queue_name)
       {
         type: :job,
         **job_fields(Sidekiq::Job.new(msg, queue_name)),

@@ -42,6 +42,27 @@ Sidekiq.configure_server do |config|
 end
 ```
 
+#### Adding extra data to events
+You can add your own data or functions to the Honeycomb event by subclassing
+`Honeykiq::ServerMiddleware` and overriding the the `extra_fields` method with your own
+hash. These will be serialized into individual items in the event:
+
+```ruby
+class MyServerMiddleware < Honeykiq::ServerMiddleware
+  def extra_fields
+    {
+      my_data: 'evaluated and added to the event after the job has finished/errored',
+      my_function: -> { Time.now }
+    }
+  end
+end
+
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+    chain.add MyServerMiddleware, honey_client: ...
+    ...
+```
+
 **Note on long running jobs:** If you have long running jobs an event is only
 sent to Honeycomb when it finishes so it may appear as no jobs are running.
 Also if the process gets a SIGKILL then no event is sent about that job and the
