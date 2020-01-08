@@ -62,7 +62,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
 
   describe 'adding `extra_fields`' do
     let(:reporter) { TestExtraFields.new(honey_client: honey_client) }
-    let(:expected_event_keys) { expected_event.keys << :extra_data_item }
+    let(:expected_user_event) { expected_event.merge(extra_data_item: 'foo') }
 
     before do
       Sidekiq::Testing.server_middleware do |chain|
@@ -73,8 +73,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
     it 'adds the extra keys' do
       TestSidekiqWorker.perform_async
 
-      expect(honey_client.events.first.data.keys.sort)
-        .to eq(expected_event_keys.sort)
+      expect(honey_client.events.first.data).to include(expected_user_event)
     end
   end
 
