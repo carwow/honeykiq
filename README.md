@@ -43,7 +43,6 @@ end
 ```
 
 #### Adding extra data to events
-
 You can add your own data or functions to the Honeycomb event by subclassing
 `Honeykiq::ServerMiddleware` and overriding the the `extra_fields` method with your own
 hash. These will be serialized into individual items in the event:
