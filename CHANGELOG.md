@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.0]
 ### Added
-- `Honeykiq::ServerMiddleware#extra_fields` so u can add custom fields to an event
+- `Honeykiq::ServerMiddleware#extra_fields` so you can add custom fields to an event
 
 ## [0.2.0]
 ### Added
