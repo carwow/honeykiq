@@ -19,6 +19,7 @@ end
 
 RSpec.describe Honeykiq::ServerMiddleware do
   let(:honey_client) { Libhoney::TestClient.new }
+  let(:test_class) { described_class }
 
   let(:expected_event) do
     {
@@ -40,7 +41,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
     Sidekiq::Testing.inline!
 
     Sidekiq::Testing.server_middleware do |chain|
-      chain.add described_class, honey_client: honey_client
+      chain.add test_class, honey_client: honey_client
     end
 
     allow(Sidekiq::Queue).to receive(:new).with('default') do |name|
@@ -61,14 +62,8 @@ RSpec.describe Honeykiq::ServerMiddleware do
   end
 
   describe 'adding `extra_fields`' do
-    let(:reporter) { TestExtraFields.new(honey_client: honey_client) }
+    let(:test_class) { TestExtraFields }
     let(:expected_user_event) { expected_event.merge(extra_data_item: 'foo') }
-
-    before do
-      Sidekiq::Testing.server_middleware do |chain|
-        chain.add TestExtraFields, honey_client: honey_client
-      end
-    end
 
     it 'adds the extra keys' do
       TestSidekiqWorker.perform_async
