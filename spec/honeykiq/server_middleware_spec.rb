@@ -75,7 +75,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
   context 'on error' do
     let(:expected_event_for_error) do
       expected_event.merge(
-        'job.arguments_bytes': 8,
+        'job.arguments_bytes': instance_of(Integer),
         'job.status': 'failed',
         'error.class': TestSidekiqWorker::Error.to_s,
         'error.message': 'BOOM'
@@ -103,6 +103,17 @@ RSpec.describe Honeykiq::ServerMiddleware do
     it 'sends an event with expected values' do
       perform do
         expect(honey_client.events.first.data).to include(expected_event_for_error)
+      end
+    end
+
+    describe 'adding `extra_fields`' do
+      let(:test_class) { TestExtraFields }
+      let(:expected_user_event) { expected_event_for_error.merge(extra_data_item: 'foo') }
+
+      it 'adds the extra keys' do
+        perform do
+          expect(honey_client.events.first.data).to include(expected_user_event)
+        end
       end
     end
   end
