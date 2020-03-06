@@ -68,7 +68,7 @@ It sends three types of events: `instance`, `process`, and `queue`. Have a look 
 
 [periodic_reporter.rb]: https://github.com/carwow/honeykiq/blob/master/lib/honeykiq/periodic_reporter.rb
 
-A simple setup using [clockwork] to report every 30 seconds would look like this:
+A setup using [clockwork] to report every 30 seconds would look like this:
 
 [clockwork]: https://github.com/Rykian/clockwork
 
