@@ -101,9 +101,11 @@ end
 
 ## Contributing
 
-[Pull requests](https://github.com/carwow/honeykiq/pulls) are very welcome! 
+[Pull requests](https://github.com/carwow/honeykiq/pulls) are very welcome! Don't forget to add yourself to [CONTRIBUTORS.txt]
 
 Please report bugs in a [new issue](https://github.com/carwow/honeykiq/issues/new).
+
+[CONTRIBUTORS.txt]: https://github.com/carwow/honeykiq/blob/master/CONTRIBUTORS.txt
 
 ## License
 
