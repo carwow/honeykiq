@@ -70,7 +70,6 @@ It sends three types of events: `instance`, `process`, and `queue`. Have a look 
 
 A setup using [clockwork] to report every 30 seconds would look like this:
 
-[clockwork]: https://github.com/Rykian/clockwork
 
 ```ruby
 require 'clockwork'
@@ -101,7 +100,7 @@ end
 
 ## Contributing
 
-[Pull requests](https://github.com/carwow/honeykiq/pulls) are very welcome! Don't forget to add yourself to [CONTRIBUTORS.txt]
+[Pull requests](https://github.com/carwow/honeykiq/pulls) are very welcome! Don't forget to add yourself to [CONTRIBUTORS.txt].
 
 Please report bugs in a [new issue](https://github.com/carwow/honeykiq/issues/new).
 
@@ -112,3 +111,4 @@ Please report bugs in a [new issue](https://github.com/carwow/honeykiq/issues/ne
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
 
 [libhoney]: https://github.com/honeycombio/libhoney-rb
+[clockwork]: https://github.com/Rykian/clockwork
