@@ -9,15 +9,14 @@ module Honeykiq
     def call(_worker, msg, queue_name)
       job = Sidekiq::Job.new(msg, queue_name)
 
-      event = start_span(name: job.display_class)
-      call_with_event(event, job, queue_name) { yield }
-    rescue StandardError => error
-      event&.add_field(:'job.status', 'failed')
-      event&.add(error_info(error))
-      raise
-    ensure
-      event&.add(extra_fields)
-      event&.send
+      start_span(name: job.display_class) do |event|
+        call_with_event(event, job, queue_name) { yield }
+      rescue StandardError => error
+        on_error(event, error)
+        raise
+      ensure
+        event&.add(extra_fields)
+      end
     end
 
     def extra_fields
@@ -28,15 +27,19 @@ module Honeykiq
 
     def start_span(name:)
       if @honey_client
-        @honey_client.event
+        @honey_client.event.tap do |event|
+          duration_ms(event) { yield event }
+        ensure
+          event.send
+        end
       else
-        Honeycomb.start_span(name: name)
+        Honeycomb.start_span(name: name) { |event| yield event }
       end
     end
 
     def call_with_event(event, job, queue_name)
       event.add(default_fields(job, queue_name))
-      duration_ms(event) { yield }
+      yield
       event.add_field(:'job.status', 'finished')
     end
 
@@ -75,8 +78,16 @@ module Honeykiq
       event.add_field(:duration_ms, duration * 1000)
     end
 
-    def error_info(error)
-      { 'error.class': error.class.name, 'error.message': error.message }
+    def on_error(event, error)
+      return unless event
+
+      event.add_field(:'job.status', 'failed')
+      return unless @honey_client
+
+      event.add(
+        'error.class': error.class.name,
+        'error.message': error.message
+      )
     end
   end
 end
