@@ -3,13 +3,14 @@ require 'sidekiq/api'
 module Honeykiq
   class ServerMiddleware
     def initialize(options = {})
-      @honey_client = options.fetch(:honey_client)
+      @honey_client = options[:honey_client]
     end
 
     def call(_worker, msg, queue_name)
-      event = @honey_client.event
+      job = Sidekiq::Job.new(msg, queue_name)
 
-      call_event(event, msg, queue_name) { yield }
+      event = start_span(name: job.display_class)
+      call_with_event(event, job, queue_name) { yield }
     rescue StandardError => error
       event&.add_field(:'job.status', 'failed')
       event&.add(error_info(error))
@@ -25,16 +26,24 @@ module Honeykiq
 
     private
 
-    def call_event(event, msg, queue_name)
-      event.add(default_fields(msg, queue_name))
+    def start_span(name:)
+      if @honey_client
+        @honey_client.event
+      else
+        Honeycomb.start_span(name: name)
+      end
+    end
+
+    def call_with_event(event, job, queue_name)
+      event.add(default_fields(job, queue_name))
       duration_ms(event) { yield }
       event.add_field(:'job.status', 'finished')
     end
 
-    def default_fields(msg, queue_name)
+    def default_fields(job, queue_name)
       {
         type: :job,
-        **job_fields(Sidekiq::Job.new(msg, queue_name)),
+        **job_fields(job),
         **queue_fields(Sidekiq::Queue.new(queue_name)),
         'meta.thread_id': Thread.current.object_id
       }
