@@ -2,7 +2,8 @@
 
 Sidekiq → Honeycomb 🐝
 
-Send [Sidekiq](https://sidekiq.org)-related events to [Honeycomb](https://www.honeycomb.io).
+Send [Sidekiq](https://sidekiq.org)-related events to
+[Honeycomb](https://www.honeycomb.io).
 
 ## Installation
 
@@ -24,11 +25,25 @@ The library provides two use cases:
 
 ### Honeykiq::ServerMiddleware
 
-Add Honeykiq to your Sidekiq server middleware chain, and pass a [`Libhoney::Client`][libhoney] as shown below. It will send an event to Honeycomb once a job finishes or fails.  Have a look at [server_middleware.rb] to see what kind of information we send.
+Add Honeykiq to your Sidekiq server middleware chain. It will send an event to
+Honeycomb once a job finishes or fails. Have a look at [server_middleware.rb]
+to see what kind of information it sends.
 
 [server_middleware.rb]: https://github.com/carwow/honeykiq/blob/master/lib/honeykiq/server_middleware.rb
 
 ```ruby
+# Configure Honeycomb and add the middleware to Sidekiq chain
+Honeycomb.configure do |config|
+  config.writekey = ENV.fetch('HONEYCOMB_WRITE_KEY')
+  config.dataset = ENV.fetch('HONEYCOMB_DATASET')
+end
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+    chain.add Honeykiq::ServerMiddleware
+  end
+end
+
+# Or pass the libhoney client to the middleware
 Sidekiq.configure_server do |config|
   config.server_middleware do |chain|
     chain.add Honeykiq::ServerMiddleware,
@@ -40,7 +55,10 @@ Sidekiq.configure_server do |config|
 end
 ```
 
-You can add your own data or functions to the Honeycomb event by subclassing `Honeykiq::ServerMiddleware`, and overriding the the `extra_fields` method with your own hash. The contents will be serialized into individual items in the event:
+You can add your own data or functions to the Honeycomb event by subclassing
+`Honeykiq::ServerMiddleware`, and overriding the the `extra_fields` method with
+your own hash. The contents will be serialized into individual items in the
+event:
 
 ```ruby
 class MyServerMiddleware < Honeykiq::ServerMiddleware
@@ -58,13 +76,23 @@ Sidekiq.configure_server do |config|
     ...
 ```
 
-**Note:** If you have long running jobs, an event is only sent to Honeycomb when the job finishes. Therefore, it may appear as though no jobs are currently running.  Additionally, if the process receives a `SIGKILL` then no event is sent about that job, and the job may keep retrying without appearing in Honeycomb. The `PeriodicReporter` should help with this, but we are thinking of a nicer approach.
+**Note:** If you have long running jobs, an event is only sent to Honeycomb
+when the job finishes. Therefore, it may appear as though no jobs are currently
+running.  Additionally, if the process receives a `SIGKILL` then no event is
+sent about that job, and the job may keep retrying without appearing in
+Honeycomb. The `PeriodicReporter` should help with this, but we are thinking of
+a nicer approach.
 
 ### Honeykiq::PeriodicReporter
 
-The periodic reporter should be scheduled to report every few seconds, depending on your use case. Every time the `#report` method is called it will send a total of `1 + P + Q` events to Honeycomb where `P` and `Q` are the number of processes and queues respectively.
+The periodic reporter should be scheduled to report every few seconds,
+depending on your use case. Every time the `#report` method is called it will
+send a total of `1 + P + Q` events to Honeycomb where `P` and `Q` are the
+number of processes and queues respectively.
 
-It sends three types of events: `instance`, `process`, and `queue`. Have a look at [periodic_reporter.rb] to see what kind of information we send for each type.
+It sends three types of events: `instance`, `process`, and `queue`. Have a look
+at [periodic_reporter.rb] to see what kind of information we send for each
+type.
 
 [periodic_reporter.rb]: https://github.com/carwow/honeykiq/blob/master/lib/honeykiq/periodic_reporter.rb
 
@@ -110,5 +138,4 @@ Please report bugs in a [new issue](https://github.com/carwow/honeykiq/issues/ne
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
 
-[libhoney]: https://github.com/honeycombio/libhoney-rb
 [clockwork]: https://github.com/Rykian/clockwork
