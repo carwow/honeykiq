@@ -111,16 +111,8 @@ Honeycomb.configure do |config|
 end
 
 module Clockwork
-  every(30, 'Honeykiq', thread: true) { SidekiqHealth.report }
-end
-
-module SidekiqHealth
-  def self.report
-    reporter.report
-  end
-
-  def self.reporter
-    @reporter ||= Honeykiq::PeriodicReporter.new(libhoney: Honeycomb.libhoney)
+  every(30, 'Honeykiq::PeriodicReporter') do
+    Honeykiq::PeriodicReporter.new.report
   end
 end
 ```

@@ -3,7 +3,7 @@ require 'sidekiq/api'
 module Honeykiq
   class PeriodicReporter
     def initialize(libhoney: nil, honey_client: nil)
-      @libhoney = libhoney || honey_client
+      @libhoney = libhoney || honey_client || Honeycomb.libhoney
     end
 
     def report(&extra)
