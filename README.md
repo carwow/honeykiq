@@ -32,11 +32,13 @@ to see what kind of information it sends.
 [server_middleware.rb]: https://github.com/carwow/honeykiq/blob/master/lib/honeykiq/server_middleware.rb
 
 ```ruby
-# Configure Honeycomb and add the middleware to Sidekiq chain
+# Configure Honeycomb beeline
 Honeycomb.configure do |config|
   config.writekey = ENV.fetch('HONEYCOMB_WRITE_KEY')
   config.dataset = ENV.fetch('HONEYCOMB_DATASET')
 end
+
+# Add the middleware to Sidekiq chain
 Sidekiq.configure_server do |config|
   config.server_middleware do |chain|
     chain.add Honeykiq::ServerMiddleware
@@ -47,7 +49,7 @@ end
 Sidekiq.configure_server do |config|
   config.server_middleware do |chain|
     chain.add Honeykiq::ServerMiddleware,
-      honey_client: Libhoney::Client.new(
+      libhoney: Libhoney::Client.new(
         writekey: ENV.fetch('HONEYCOMB_WRITE_KEY'),
         dataset: ENV.fetch('HONEYCOMB_DATASET')
       )
@@ -72,16 +74,16 @@ end
 
 Sidekiq.configure_server do |config|
   config.server_middleware do |chain|
-    chain.add MyServerMiddleware, honey_client: ...
-    ...
+    chain.add MyServerMiddleware
+  end
+end
 ```
 
 **Note:** If you have long running jobs, an event is only sent to Honeycomb
 when the job finishes. Therefore, it may appear as though no jobs are currently
 running.  Additionally, if the process receives a `SIGKILL` then no event is
 sent about that job, and the job may keep retrying without appearing in
-Honeycomb. The `PeriodicReporter` should help with this, but we are thinking of
-a nicer approach.
+Honeycomb. The `PeriodicReporter` provides visibility for these cases.
 
 ### Honeykiq::PeriodicReporter
 
@@ -98,11 +100,15 @@ type.
 
 A setup using [clockwork] to report every 30 seconds would look like this:
 
-
 ```ruby
+require 'honeycomb-beeline'
 require 'clockwork'
-require 'libhoney'
 require 'honeykiq'
+
+Honeycomb.configure do |config|
+  config.writekey = ENV.fetch('HONEYCOMB_WRITE_KEY')
+  config.dataset = ENV.fetch('HONEYCOMB_DATASET')
+end
 
 module Clockwork
   every(30, 'Honeykiq', thread: true) { SidekiqHealth.report }
@@ -114,21 +120,15 @@ module SidekiqHealth
   end
 
   def self.reporter
-    @reporter ||= Honeykiq::PeriodicReporter.new(honey_client: honey_client)
-  end
-
-  def self.honey_client
-    Libhoney::Client.new(
-      writekey: ENV.fetch('HONEYCOMB_WRITE_KEY'),
-      dataset: ENV.fetch('HONEYCOMB_DATASET')
-    )
+    @reporter ||= Honeykiq::PeriodicReporter.new(libhoney: Honeycomb.libhoney)
   end
 end
 ```
 
 ## Contributing
 
-[Pull requests](https://github.com/carwow/honeykiq/pulls) are very welcome! Don't forget to add yourself to [CONTRIBUTORS.txt].
+[Pull requests](https://github.com/carwow/honeykiq/pulls) are very welcome!
+Don't forget to add yourself to [CONTRIBUTORS.txt].
 
 Please report bugs in a [new issue](https://github.com/carwow/honeykiq/issues/new).
 
@@ -136,6 +136,7 @@ Please report bugs in a [new issue](https://github.com/carwow/honeykiq/issues/ne
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+The gem is available as open source under the terms of the
+[MIT License](https://opensource.org/licenses/MIT).
 
 [clockwork]: https://github.com/Rykian/clockwork

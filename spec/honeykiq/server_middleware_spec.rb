@@ -18,7 +18,7 @@ class TestExtraFields < Honeykiq::ServerMiddleware
 end
 
 RSpec.describe Honeykiq::ServerMiddleware do
-  let(:honey_client) { Libhoney::TestClient.new }
+  let(:libhoney) { Libhoney::TestClient.new }
   let(:test_class) { described_class }
 
   let(:base_event) do
@@ -55,13 +55,13 @@ RSpec.describe Honeykiq::ServerMiddleware do
     it 'sends an event with expected keys' do
       TestSidekiqWorker.perform_async
 
-      expect(honey_client.events.first.data.keys).to match_array(expected_keys)
+      expect(libhoney.events.first.data.keys).to match_array(expected_keys)
     end
 
     it 'sends an event with expected values' do
       TestSidekiqWorker.perform_async
 
-      expect(honey_client.events.first.data).to include(expected_event)
+      expect(libhoney.events.first.data).to include(expected_event)
     end
 
     describe 'adding `extra_fields`' do
@@ -71,7 +71,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
       it 'adds the extra keys' do
         TestSidekiqWorker.perform_async
 
-        expect(honey_client.events.first.data).to include(expected_user_event)
+        expect(libhoney.events.first.data).to include(expected_user_event)
       end
     end
 
@@ -99,13 +99,13 @@ RSpec.describe Honeykiq::ServerMiddleware do
 
       it 'sends an event with expected keys' do
         perform do
-          expect(honey_client.events.first.data.keys).to match_array(expected_keys_for_error)
+          expect(libhoney.events.first.data.keys).to match_array(expected_keys_for_error)
         end
       end
 
       it 'sends an event with expected values' do
         perform do
-          expect(honey_client.events.first.data).to include(expected_event_for_error)
+          expect(libhoney.events.first.data).to include(expected_event_for_error)
         end
       end
 
@@ -115,7 +115,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
 
         it 'adds the extra keys' do
           perform do
-            expect(honey_client.events.first.data).to include(expected_user_event)
+            expect(libhoney.events.first.data).to include(expected_user_event)
           end
         end
       end
@@ -129,7 +129,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
         TestSidekiqWorker.jobs.first['bid'] = '123'
         TestSidekiqWorker.drain
 
-        expect(honey_client.events.first.data).to include('job.batch_id': '123')
+        expect(libhoney.events.first.data).to include('job.batch_id': '123')
       end
     end
 
@@ -141,7 +141,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
         TestSidekiqWorker.jobs.first['retry_count'] = 4
         TestSidekiqWorker.drain
 
-        expect(honey_client.events.first.data).to include('job.attempt_number': 5)
+        expect(libhoney.events.first.data).to include('job.attempt_number': 5)
       end
     end
   end
@@ -154,7 +154,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
     before do
       Sidekiq::Testing.server_middleware do |chain|
         chain.clear
-        chain.add test_class, honey_client: honey_client
+        chain.add test_class, libhoney: libhoney
       end
     end
 
@@ -189,7 +189,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
 
     before do
       Honeycomb.configure do |config|
-        config.client = honey_client
+        config.client = libhoney
       end
       Sidekiq::Testing.server_middleware do |chain|
         chain.clear

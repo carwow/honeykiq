@@ -2,20 +2,16 @@ require 'sidekiq/api'
 
 module Honeykiq
   class ServerMiddleware
-    def initialize(options = {})
-      @honey_client = options[:honey_client]
+    def initialize(libhoney: nil, honey_client: nil)
+      @libhoney = libhoney || honey_client
     end
 
     def call(_worker, msg, queue_name)
       job = Sidekiq::Job.new(msg, queue_name)
+      queue = Sidekiq::Queue.new(queue_name)
 
       start_span(name: job.display_class) do |event|
-        call_with_event(event, job, queue_name) { yield }
-      rescue StandardError => error
-        on_error(event, error)
-        raise
-      ensure
-        event&.add(extra_fields)
+        call_with_event(event, job, queue) { yield }
       end
     end
 
@@ -25,9 +21,15 @@ module Honeykiq
 
     private
 
+    attr_reader :libhoney
+
+    def libhoney?
+      !!libhoney
+    end
+
     def start_span(name:)
-      if @honey_client
-        @honey_client.event.tap do |event|
+      if libhoney?
+        libhoney.event.tap do |event|
           duration_ms(event) { yield event }
         ensure
           event.send
@@ -37,17 +39,22 @@ module Honeykiq
       end
     end
 
-    def call_with_event(event, job, queue_name)
-      event.add(default_fields(job, queue_name))
+    def call_with_event(event, job, queue)
+      event.add(default_fields(job, queue))
       yield
       event.add_field(:'job.status', 'finished')
+    rescue StandardError => error
+      on_error(event, error)
+      raise
+    ensure
+      event.add(extra_fields)
     end
 
-    def default_fields(job, queue_name)
+    def default_fields(job, queue)
       {
         type: :job,
         **job_fields(job),
-        **queue_fields(Sidekiq::Queue.new(queue_name)),
+        **queue_fields(queue),
         'meta.thread_id': Thread.current.object_id
       }
     end
@@ -82,7 +89,7 @@ module Honeykiq
       return unless event
 
       event.add_field(:'job.status', 'failed')
-      return unless @honey_client
+      return unless libhoney?
 
       event.add(
         'error.class': error.class.name,
