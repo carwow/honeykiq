@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    honeykiq (1.1.0.pre)
+    honeykiq (1.1.0)
       sidekiq
 
 GEM
