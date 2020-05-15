@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    honeykiq (1.0.0)
+    honeykiq (1.1.0)
       sidekiq
 
 GEM
@@ -23,6 +23,8 @@ GEM
     ffi-compiler (1.0.1)
       ffi (>= 1.0.0)
       rake
+    honeycomb-beeline (2.0.0)
+      libhoney (~> 1.14, >= 1.14.2)
     http (4.4.1)
       addressable (~> 2.3)
       http-cookie (~> 1.0)
@@ -94,8 +96,8 @@ PLATFORMS
 DEPENDENCIES
   bundler
   carwow_rubocop
+  honeycomb-beeline
   honeykiq!
-  libhoney
   pry
   rake
   rspec

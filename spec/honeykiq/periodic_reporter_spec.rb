@@ -1,8 +1,8 @@
 require 'libhoney'
 
 RSpec.describe Honeykiq::PeriodicReporter do
-  let(:reporter) { described_class.new(honey_client: honey_client) }
-  let(:honey_client) { Libhoney::TestClient.new }
+  let(:reporter) { described_class.new(libhoney: libhoney) }
+  let(:libhoney) { Libhoney::TestClient.new }
 
   let(:stats) do
     instance_double(Sidekiq::Stats,
@@ -64,40 +64,40 @@ RSpec.describe Honeykiq::PeriodicReporter do
   it '#report for instance' do
     reporter.report
 
-    expect(honey_client.events.first.data).to eq(expected_instance_event)
+    expect(libhoney.events.first.data).to eq(expected_instance_event)
   end
 
   it '#report for process' do
     reporter.report
 
-    expect(honey_client.events.drop(1).first.data).to eq(expected_process_event)
+    expect(libhoney.events.drop(1).first.data).to eq(expected_process_event)
   end
 
   it '#report for queue' do
     reporter.report
 
-    expect(honey_client.events.drop(2).first.data).to eq(expected_queue_event)
+    expect(libhoney.events.drop(2).first.data).to eq(expected_queue_event)
   end
 
   context 'with extra fields' do
     it '#report for instance' do
       reporter.report { |type| { extra: 'cool' } if type == :instance }
 
-      expect(honey_client.events.first.data)
+      expect(libhoney.events.first.data)
         .to eq(expected_instance_event.merge(extra: 'cool'))
     end
 
     it '#report for process' do
       reporter.report { |type, process| { extra: process['hostname'] } if type == :process }
 
-      expect(honey_client.events.drop(1).first.data)
+      expect(libhoney.events.drop(1).first.data)
         .to eq(expected_process_event.merge(extra: process['hostname']))
     end
 
     it '#report for queue' do
       reporter.report { |type, queue| { extra: queue.name } if type == :queue }
 
-      expect(honey_client.events.drop(2).first.data)
+      expect(libhoney.events.drop(2).first.data)
         .to eq(expected_queue_event.merge(extra: queue.name))
     end
   end

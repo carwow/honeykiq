@@ -2,21 +2,17 @@ require 'sidekiq/api'
 
 module Honeykiq
   class ServerMiddleware
-    def initialize(options = {})
-      @honey_client = options.fetch(:honey_client)
+    def initialize(libhoney: nil, honey_client: nil)
+      @libhoney = libhoney || honey_client
     end
 
     def call(_worker, msg, queue_name)
-      event = @honey_client.event
+      job = Sidekiq::Job.new(msg, queue_name)
+      queue = Sidekiq::Queue.new(queue_name)
 
-      call_event(event, msg, queue_name) { yield }
-    rescue StandardError => error
-      event&.add_field(:'job.status', 'failed')
-      event&.add(error_info(error))
-      raise
-    ensure
-      event&.add(extra_fields)
-      event&.send
+      start_span(name: job.display_class) do |event|
+        call_with_event(event, job, queue) { yield }
+      end
     end
 
     def extra_fields
@@ -25,17 +21,40 @@ module Honeykiq
 
     private
 
-    def call_event(event, msg, queue_name)
-      event.add(default_fields(msg, queue_name))
-      duration_ms(event) { yield }
-      event.add_field(:'job.status', 'finished')
+    attr_reader :libhoney
+
+    def libhoney?
+      !!libhoney
     end
 
-    def default_fields(msg, queue_name)
+    def start_span(name:)
+      if libhoney?
+        libhoney.event.tap do |event|
+          duration_ms(event) { yield event }
+        ensure
+          event.send
+        end
+      else
+        Honeycomb.start_span(name: name) { |event| yield event }
+      end
+    end
+
+    def call_with_event(event, job, queue)
+      event.add(default_fields(job, queue))
+      yield
+      event.add_field(:'job.status', 'finished')
+    rescue StandardError => error
+      on_error(event, error)
+      raise
+    ensure
+      event.add(extra_fields)
+    end
+
+    def default_fields(job, queue)
       {
         type: :job,
-        **job_fields(Sidekiq::Job.new(msg, queue_name)),
-        **queue_fields(Sidekiq::Queue.new(queue_name)),
+        **job_fields(job),
+        **queue_fields(queue),
         'meta.thread_id': Thread.current.object_id
       }
     end
@@ -66,8 +85,16 @@ module Honeykiq
       event.add_field(:duration_ms, duration * 1000)
     end
 
-    def error_info(error)
-      { 'error.class': error.class.name, 'error.message': error.message }
+    def on_error(event, error)
+      return unless event
+
+      event.add_field(:'job.status', 'failed')
+      return unless libhoney?
+
+      event.add(
+        'error.class': error.class.name,
+        'error.message': error.message
+      )
     end
   end
 end

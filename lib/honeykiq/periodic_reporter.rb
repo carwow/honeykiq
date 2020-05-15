@@ -2,8 +2,8 @@ require 'sidekiq/api'
 
 module Honeykiq
   class PeriodicReporter
-    def initialize(honey_client:)
-      @honey_client = honey_client
+    def initialize(libhoney: nil, honey_client: nil)
+      @libhoney = libhoney || honey_client || Honeycomb.libhoney
     end
 
     def report(&extra)
@@ -14,10 +14,10 @@ module Honeykiq
 
     private
 
-    attr_reader :honey_client
+    attr_reader :libhoney
 
     def send_instance_event(&extra)
-      honey_client.event.add(
+      libhoney.event.add(
         type: :instance,
         **instance_stats,
         **redis_stats,
@@ -57,7 +57,7 @@ module Honeykiq
     end
 
     def send_process_event(process, &extra)
-      honey_client.event.add(
+      libhoney.event.add(
         type: :process,
         'meta.dyno': process['hostname'],
         'meta.process_id': process['pid'],
@@ -68,7 +68,7 @@ module Honeykiq
     end
 
     def send_queue_event(queue, &extra)
-      honey_client.event.add(
+      libhoney.event.add(
         type: :queue,
         'queue.name': queue.name,
         'queue.latency_sec': queue.latency.to_f,

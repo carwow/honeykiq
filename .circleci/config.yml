@@ -1,5 +1,5 @@
 ruby: &ruby
-  image: carwow/ruby-ci:2.5.3
+  image: carwow/ruby-ci:2.6
 
 version: 2
 
