@@ -117,18 +117,15 @@ module Clockwork
 end
 ```
 
+[clockwork]: https://github.com/Rykian/clockwork
+
 ## Contributing
 
 [Pull requests](https://github.com/carwow/honeykiq/pulls) are very welcome!
-Don't forget to add yourself to [CONTRIBUTORS.txt].
 
 Please report bugs in a [new issue](https://github.com/carwow/honeykiq/issues/new).
-
-[CONTRIBUTORS.txt]: https://github.com/carwow/honeykiq/blob/master/CONTRIBUTORS.txt
 
 ## License
 
 The gem is available as open source under the terms of the
 [MIT License](https://opensource.org/licenses/MIT).
-
-[clockwork]: https://github.com/Rykian/clockwork
