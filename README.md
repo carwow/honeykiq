@@ -121,9 +121,15 @@ end
 
 ## Contributing
 
-[Pull requests](https://github.com/carwow/honeykiq/pulls) are very welcome!
+[Pull requests] are very welcome!
 
-Please report bugs in a [new issue](https://github.com/carwow/honeykiq/issues/new).
+Please report bugs in a [new issue].
+
+Everyone is expected to follow the [code of conduct].
+
+[Pull requests]: https://github.com/carwow/honeykiq/pulls
+[new issue]: https://github.com/carwow/honeykiq/issues/new
+[code of conduct]: https://github.com/carwow/honeykiq/tree/master/CODE_OF_CONDUCT.md
 
 ## License
 
