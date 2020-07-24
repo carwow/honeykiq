@@ -47,7 +47,17 @@ module Honeykiq
       on_error(event, error)
       raise
     ensure
+      send_job_fields(event, job)
       event.add(extra_fields)
+    end
+
+    def send_job_fields(event, job)
+      job_const = Object.const_get(job.value['class'])
+      return unless job_const.respond_to?(:extra_fields)
+
+      job_extra_fields = job_const.send(:extra_fields, job)
+
+      event.add(job_extra_fields)
     end
 
     def default_fields(job, queue)

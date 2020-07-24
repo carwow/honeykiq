@@ -11,6 +11,19 @@ class TestSidekiqWorker
   end
 end
 
+class TestJobExtraFieldsSidekiqWorker
+  include Sidekiq::Worker
+
+  def perform(args = nil); end
+
+  def self.extra_fields(job)
+    {
+      foo: job.args.first['foo'],
+      bar: job.args.first['bar']
+    }
+  end
+end
+
 class TestExtraFields < Honeykiq::ServerMiddleware
   def extra_fields
     { extra_data_item: 'foo' }
@@ -72,6 +85,18 @@ RSpec.describe Honeykiq::ServerMiddleware do
         TestSidekiqWorker.perform_async
 
         expect(libhoney.events.first.data).to include(expected_user_event)
+      end
+    end
+
+    describe 'adding `extra_fields` from job class' do
+      let(:test_class) { TestExtraFields }
+      let(:expected_job_arguments) { { foo: 'baz', bar: 'qux' } }
+      let(:expected_user_event) { expected_event.merge(expected_job_arguments) }
+
+      it 'adds the extra keys from the job class' do
+        TestJobExtraFieldsSidekiqWorker.perform_async(foo: 'baz', bar: 'qux')
+
+        expect(libhoney.events.first.data).to include(expected_job_arguments)
       end
     end
 
