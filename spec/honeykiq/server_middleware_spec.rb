@@ -28,6 +28,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
       'job.class': TestSidekiqWorker.to_s,
       'job.attempt_number': 1,
       'job.id': instance_of(String),
+      'job.arguments': instance_of(Array),
       'job.arguments_bytes': 2,
       'job.latency_sec': be_within(0.5).of(0),
       'job.status': 'finished',
@@ -62,6 +63,17 @@ RSpec.describe Honeykiq::ServerMiddleware do
       TestSidekiqWorker.perform_async
 
       expect(libhoney.events.first.data).to include(expected_event)
+    end
+
+    describe 'with job arguments' do
+      let(:test_class) { TestExtraFields }
+      let(:expected_user_event) { expected_event.merge(extra_data_item: 'foo') }
+      let(:job_arguments) { { 'debug_data' => { 'foo' => 'bar' } } }
+
+      it 'sends an event with the job arugments' do
+        TestSidekiqWorker.perform_async(job_arguments)
+        expect(libhoney.events.first.data[:'job.arguments']).to include(job_arguments)
+      end
     end
 
     describe 'adding `extra_fields`' do

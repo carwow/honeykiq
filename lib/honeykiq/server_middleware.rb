@@ -66,7 +66,8 @@ module Honeykiq
         'job.id': job.jid,
         'job.arguments_bytes': job.args.to_json.bytesize,
         'job.latency_sec': job.latency,
-        'job.batch_id': job['bid']
+        'job.batch_id': job['bid'],
+        'job.arguments': job.args
       }.compact
     end
 
