@@ -17,6 +17,12 @@ class TestExtraFields < Honeykiq::ServerMiddleware
   end
 end
 
+class TestExtraJobFields < Honeykiq::ServerMiddleware
+  def extra_job_fields(job)
+    { 'job.arguments': job.args }
+  end
+end
+
 RSpec.describe Honeykiq::ServerMiddleware do
   let(:libhoney) { Libhoney::TestClient.new }
   let(:test_class) { described_class }
@@ -28,7 +34,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
       'job.class': TestSidekiqWorker.to_s,
       'job.attempt_number': 1,
       'job.id': instance_of(String),
-      'job.arguments_bytes': 2,
+      'job.arguments_bytes': instance_of(Integer),
       'job.latency_sec': be_within(0.5).of(0),
       'job.status': 'finished',
       'queue.name': 'default',
@@ -70,6 +76,22 @@ RSpec.describe Honeykiq::ServerMiddleware do
 
       it 'adds the extra keys' do
         TestSidekiqWorker.perform_async
+
+        expect(libhoney.events.first.data).to include(expected_user_event)
+      end
+    end
+
+    context 'with job arguments' do
+      let(:test_class) { TestExtraJobFields }
+      let(:job_arguments) { { 'arg_1' => true, 'arg_2' => true } }
+      let(:expected_user_event) do
+        expected_event.merge(
+          'job.arguments': [job_arguments]
+        )
+      end
+
+      it 'passes job arguments to `extra_fields`' do
+        TestSidekiqWorker.perform_async(job_arguments)
 
         expect(libhoney.events.first.data).to include(expected_user_event)
       end

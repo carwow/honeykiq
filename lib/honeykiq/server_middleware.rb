@@ -19,6 +19,12 @@ module Honeykiq
       {}
     end
 
+    # rubocop:disable Lint/UnusedMethodArgument
+    def extra_job_fields(job = nil)
+      {}
+    end
+    # rubocop:enable Lint/UnusedMethodArgument
+
     private
 
     attr_reader :libhoney
@@ -48,6 +54,7 @@ module Honeykiq
       raise
     ensure
       event.add(extra_fields)
+      event.add(extra_job_fields(job))
     end
 
     def default_fields(job, queue)
