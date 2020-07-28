@@ -18,7 +18,7 @@ class TestExtraFields < Honeykiq::ServerMiddleware
 end
 
 class TestExtraJobFields < Honeykiq::ServerMiddleware
-  def extra_job_fields(job)
+  def extra_fields(job)
     { 'job.arguments': job.args }
   end
 end

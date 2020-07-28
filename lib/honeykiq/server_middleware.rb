@@ -15,15 +15,9 @@ module Honeykiq
       end
     end
 
-    def extra_fields
+    def extra_fields(_job = nil)
       {}
     end
-
-    # rubocop:disable Lint/UnusedMethodArgument
-    def extra_job_fields(job = nil)
-      {}
-    end
-    # rubocop:enable Lint/UnusedMethodArgument
 
     private
 
@@ -53,8 +47,7 @@ module Honeykiq
       on_error(event, error)
       raise
     ensure
-      event.add(extra_fields)
-      event.add(extra_job_fields(job))
+      event.add(call_extra_fields(job))
     end
 
     def default_fields(job, queue)
@@ -102,6 +95,13 @@ module Honeykiq
         'error.class': error.class.name,
         'error.message': error.message
       )
+    end
+
+    def call_extra_fields(job)
+      case method(:extra_fields).arity
+      when 0 then extra_fields
+      else extra_fields(job)
+      end
     end
 
     if defined?(Process::CLOCK_MONOTONIC)
