@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0]
+### Added
+- Allow extra_fields to be invoked with job (#16)
+
 ## [1.1.0]
 ### Added
 - Honeycomb beeline support (#9)
@@ -33,7 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - `Honeykiq.periodic_reporter`. (Use `Honeykiq::PeriodicReporter.new` instead.)
 
-[Unreleased]: https://github.com/carwow/honeykiq/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/carwow/honeykiq/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/carwow/honeykiq/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/carwow/honeykiq/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/carwow/honeykiq/compare/v0.3.1...v1.0.0
 [0.3.1]: https://github.com/carwow/honeykiq/compare/v0.3.0...v0.3.1

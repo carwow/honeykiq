@@ -64,7 +64,7 @@ event:
 
 ```ruby
 class MyServerMiddleware < Honeykiq::ServerMiddleware
-  def extra_fields
+  def extra_fields(job) # Sidekiq::Job instance
     {
       my_data: 'evaluated and added to the event after the job has finished/errored',
       my_function: -> { Time.now }
