@@ -15,13 +15,52 @@ gem 'honeykiq'
 
 ## Usage
 
-The library provides two use cases:
+The library provides three use cases:
 
+- [`Honeykiq::ClientMiddleware`]
 - [`Honeykiq::ServerMiddleware`]
 - [`Honeykiq::PeriodicReporter`]
 
+[`Honeykiq::ClientMiddleware`]: #HoneykiqClientMiddleware
 [`Honeykiq::ServerMiddleware`]: #HoneykiqServerMiddleware
 [`Honeykiq::PeriodicReporter`]: #HoneykiqPeriodicReporter
+
+### Honeykiq::ClientMiddleware
+
+Add Honeykiq to your Sidekiq client middleware chain. It will propagate tracing
+fields when used in combination with `Honeykiq::ServerMiddleware`.
+
+This middleware is **only** configured to work with the `Honeycomb` beeline gem,
+not with a custom `Libhoney` client.
+
+```ruby
+# Configure Honeycomb beeline
+Honeycomb.configure do |config|
+  config.writekey = ENV.fetch('HONEYCOMB_WRITE_KEY')
+  config.dataset = ENV.fetch('HONEYCOMB_DATASET')
+end
+
+# Add the middleware to Sidekiq chain
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+     # tracing_mode: options are :link or :child
+     # - :link will use link events https://docs.honeycomb.io/getting-data-in/tracing/send-trace-data/#links
+     # - :child will use add the job as a span to the enqueing trace
+    chain.add Honeykiq::ServerMiddleware, tracing_mode: :link
+  end
+
+  # Configure the servers client. Used when a worker enqueues a job itself.
+  config.client_middleware do |chain|
+    chain.add Honeykiq::ClientMiddleware
+  end
+end
+
+Sidekiq.configure_client do |config|
+  config.client_middleware do |chain|
+    chain.add Honeykiq::ClientMiddleware
+  end
+end
+```
 
 ### Honeykiq::ServerMiddleware
 

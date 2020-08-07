@@ -184,6 +184,29 @@ RSpec.describe Honeykiq::ServerMiddleware do
   end
 
   describe 'with Honeycomb beeline' do
+    subject(:enqueue) do
+      parent_span = nil
+
+      Honeycomb.start_span(name: 'test') do |span|
+        parent_span = span
+
+        TestSidekiqWorker.perform_async
+      end
+
+      parent_span
+    end
+
+    let(:expected_error_info) do
+      {
+        'error' => TestSidekiqWorker::Error.to_s,
+        'error_detail' => 'BOOM'
+      }
+    end
+
+    let(:expected_event) do
+      base_event.merge('duration_ms' => be_within(0.5).of(0))
+    end
+
     let(:expected_keys) do
       expected_event.keys + [
         'meta.beeline_version',
@@ -198,27 +221,88 @@ RSpec.describe Honeykiq::ServerMiddleware do
       ]
     end
 
-    let(:expected_event) do
-      base_event.merge('duration_ms' => be_within(0.5).of(0))
-    end
-
-    let(:expected_error_info) do
-      {
-        'error' => TestSidekiqWorker::Error.to_s,
-        'error_detail' => 'BOOM'
-      }
-    end
-
     before do
+      Sidekiq::Worker.clear_all
+
       Honeycomb.configure do |config|
         config.client = libhoney
       end
+
       Sidekiq::Testing.server_middleware do |chain|
         chain.clear
-        chain.add test_class
+        chain.add test_class, **server_middleware_params
+      end
+
+      Sidekiq.configure_client do |config|
+        config.client_middleware do |chain|
+          chain.clear
+          chain.add Honeykiq::ClientMiddleware
+        end
+      end
+
+      libhoney.reset
+    end
+
+    context 'with no tracing' do
+      let(:server_middleware_params) { {} }
+
+      it 'send no additional event' do
+        enqueue
+
+        expect(libhoney.events.size).to eq(2)
+      end
+
+      it 'does not propagate a trace' do
+        parent_span = enqueue
+
+        expect(libhoney.events.first.data).not_to include(
+          'trace.parent_id': parent_span.id,
+          'trace.trace_id': parent_span.trace.id
+        )
       end
     end
 
-    it_behaves_like 'sends event with all fields'
+    context 'when tracing via link events' do
+      let(:server_middleware_params) { { tracing_mode: :link } }
+
+      it 'sends an additional event' do
+        enqueue
+
+        expect(libhoney.events.size).to eq(3)
+      end
+
+      it 'propagates the trace' do
+        parent_span = enqueue
+
+        expect(libhoney.events.first.data).to include(
+          'trace.link.trace_id': parent_span.trace.id,
+          'trace.link.span_id': parent_span.id,
+          'meta.span_type': 'link',
+          'trace.parent_id': kind_of(String),
+          'trace.trace_id': kind_of(String)
+        )
+      end
+    end
+
+    context 'when tracing via child event' do
+      let(:parent_span) { enqueue }
+      let(:server_middleware_params) { { tracing_mode: :child } }
+      let(:expected_event) do
+        super().merge(
+          'trace.parent_id' => parent_span.id,
+          'trace.trace_id' => parent_span.trace.id
+        )
+      end
+
+      before { parent_span }
+
+      it 'send no additional event' do
+        expect(libhoney.events.size).to eq(2)
+      end
+
+      it 'propagates the trace' do
+        expect(libhoney.events.first.data).to include(expected_event)
+      end
+    end
   end
 end

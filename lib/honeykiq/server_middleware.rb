@@ -2,15 +2,16 @@ require 'sidekiq/api'
 
 module Honeykiq
   class ServerMiddleware
-    def initialize(libhoney: nil, honey_client: nil)
+    def initialize(libhoney: nil, honey_client: nil, tracing_mode: nil)
       @libhoney = libhoney || honey_client
+      @tracing_mode = tracing_mode
     end
 
     def call(_worker, msg, queue_name)
       job = Sidekiq::Job.new(msg, queue_name)
       queue = Sidekiq::Queue.new(queue_name)
 
-      start_span(name: job.display_class) do |event|
+      span_builder.call(name: job.display_class, serialized_trace: msg['serialized_trace']) do |event|
         call_with_event(event, job, queue) { yield }
       end
     end
@@ -21,22 +22,14 @@ module Honeykiq
 
     private
 
-    attr_reader :libhoney
+    attr_reader :libhoney, :tracing_mode
 
     def libhoney?
       !!libhoney
     end
 
-    def start_span(name:)
-      if libhoney?
-        libhoney.event.tap do |event|
-          duration_ms(event) { yield event }
-        ensure
-          event.send
-        end
-      else
-        Honeycomb.start_span(name: name) { |event| yield event }
-      end
+    def span_builder
+      @span_builder ||= libhoney? ? LibhoneySpan.new(libhoney) : BeelineSpan.new(tracing_mode)
     end
 
     def call_with_event(event, job, queue)
@@ -77,14 +70,6 @@ module Honeykiq
       }
     end
 
-    def duration_ms(event)
-      start_time = now
-      yield
-    ensure
-      duration = now - start_time
-      event.add_field(:duration_ms, duration * 1000)
-    end
-
     def on_error(event, error)
       return unless event
 
@@ -101,16 +86,6 @@ module Honeykiq
       case method(:extra_fields).arity
       when 0 then extra_fields
       else extra_fields(job)
-      end
-    end
-
-    if defined?(Process::CLOCK_MONOTONIC)
-      def now
-        Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      end
-    else
-      def now
-        Time.now
       end
     end
   end
