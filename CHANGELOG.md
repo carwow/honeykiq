@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - Link events respect beeline sampling (#17)
+  WARNING: This is technically a breaking change since it now sends
+  `meta.annotation_type` field instead of `meta.span_type` for the link event,
+  but `meta.span_type` is deprecated for annotation events since it already has
+  another use case which the beeline uses. I believe no one is actually using
+  link events anyway. If you run into problems and need help, open an issue.
 
 ## [1.3.0]
 ### Added

@@ -20,14 +20,18 @@ Sidekiq.configure_server do |config|
 
   # Configure ServerMiddleware with a tracing mode
   config.server_middleware do |chain|
-    # tracing_mode: options are nil (default), :child, :link
-    # - nil (default) will start a span and trace when the job executes.
-    # - :child will start a span as a child of the enqueuing trace when the job executes,
+    # tracing_mode: options are nil (default), :child, :child_trace, :link
+    #
+    # - nil (default) starts a span and trace when the job executes.
+    #
+    # - :child starts a span as a child of the enqueuing trace,
     #   requires ClientMiddleware to be configured when enqueuing the job.
-    # - :link will start a span and trace with a link event that points to the enqueuing trace,
+    #
+    # - :link (experimental) starts a span and trace
+    #   with a link event that points to the enqueuing trace,
     #   requires ClientMiddleware to be configured when enqueuing the job.
     #   https://docs.honeycomb.io/getting-data-in/tracing/send-trace-data/#links
-    chain.add Honeykiq::ServerMiddleware, tracing_mode: :link
+    chain.add Honeykiq::ServerMiddleware, tracing_mode: :child
   end
 end
 
