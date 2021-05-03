@@ -36,28 +36,34 @@ not with a custom `Libhoney` client.
 ```ruby
 # Configure Honeycomb beeline
 Honeycomb.configure do |config|
-  config.writekey = ENV.fetch('HONEYCOMB_WRITE_KEY')
+  config.write_key = ENV.fetch('HONEYCOMB_WRITE_KEY')
   config.dataset = ENV.fetch('HONEYCOMB_DATASET')
 end
 
 # Add the middleware to Sidekiq chain
-Sidekiq.configure_server do |config|
-  config.server_middleware do |chain|
-     # tracing_mode: options are :link or :child
-     # - :link will use link events https://docs.honeycomb.io/getting-data-in/tracing/send-trace-data/#links
-     # - :child will use add the job as a span to the enqueing trace
-    chain.add Honeykiq::ServerMiddleware, tracing_mode: :link
-  end
-
-  # Configure the servers client. Used when a worker enqueues a job itself.
+Sidekiq.configure_client do |config|
   config.client_middleware do |chain|
     chain.add Honeykiq::ClientMiddleware
   end
 end
 
-Sidekiq.configure_client do |config|
+# Also add it to the server client chain
+Sidekiq.configure_server do |config|
+  # Configure the server client, used when a worker enqueues a job itself.
   config.client_middleware do |chain|
     chain.add Honeykiq::ClientMiddleware
+  end
+
+  # Configure ServerMiddleware with a tracing mode
+  config.server_middleware do |chain|
+    # tracing_mode: options are nil (default), :child, :link
+    # - nil (default) will start a span and trace when the job executes.
+    # - :child will start a span as a child of the enqueuing trace when the job executes,
+    #   requires ClientMiddleware to be configured when enqueuing the job.
+    # - :link will start a span and trace with a link event that points to the enqueuing trace,
+    #   requires ClientMiddleware to be configured when enqueuing the job.
+    #   https://docs.honeycomb.io/getting-data-in/tracing/send-trace-data/#links
+    chain.add Honeykiq::ServerMiddleware, tracing_mode: :child
   end
 end
 ```
@@ -73,7 +79,7 @@ to see what kind of information it sends.
 ```ruby
 # Configure Honeycomb beeline
 Honeycomb.configure do |config|
-  config.writekey = ENV.fetch('HONEYCOMB_WRITE_KEY')
+  config.write_key = ENV.fetch('HONEYCOMB_WRITE_KEY')
   config.dataset = ENV.fetch('HONEYCOMB_DATASET')
 end
 
@@ -89,7 +95,7 @@ Sidekiq.configure_server do |config|
   config.server_middleware do |chain|
     chain.add Honeykiq::ServerMiddleware,
       libhoney: Libhoney::Client.new(
-        writekey: ENV.fetch('HONEYCOMB_WRITE_KEY'),
+        write_key: ENV.fetch('HONEYCOMB_WRITE_KEY'),
         dataset: ENV.fetch('HONEYCOMB_DATASET')
       )
   end
@@ -145,7 +151,7 @@ require 'clockwork'
 require 'honeykiq'
 
 Honeycomb.configure do |config|
-  config.writekey = ENV.fetch('HONEYCOMB_WRITE_KEY')
+  config.write_key = ENV.fetch('HONEYCOMB_WRITE_KEY')
   config.dataset = ENV.fetch('HONEYCOMB_DATASET')
 end
 
