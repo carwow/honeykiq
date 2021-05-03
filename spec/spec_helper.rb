@@ -10,7 +10,6 @@ RSpec.configure do |config|
   config.order = :random
   config.profile_examples = 1
   config.shared_context_metadata_behavior = :apply_to_host_groups
-  config.warnings = true
 
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true

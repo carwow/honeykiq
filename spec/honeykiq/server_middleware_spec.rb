@@ -170,7 +170,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
 
   describe 'with Libhoney client' do
     let(:expected_event) do
-      base_event.merge('duration_ms': be_within(0.5).of(0))
+      base_event.merge(duration_ms: be_within(0.5).of(0))
     end
 
     before do
@@ -277,7 +277,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
         expect(libhoney.events.first.data).to include(
           'trace.link.trace_id': parent_span.trace.id,
           'trace.link.span_id': parent_span.id,
-          'meta.span_type': 'link',
+          'meta.annotation_type': 'link',
           'trace.parent_id': kind_of(String),
           'trace.trace_id': kind_of(String)
         )

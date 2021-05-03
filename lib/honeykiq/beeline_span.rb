@@ -25,10 +25,8 @@ module Honeykiq
       end
     end
 
-    def child_span(name, serialized_trace)
-      Honeycomb.start_span(name: name, serialized_trace: serialized_trace) do |event|
-        yield event
-      end
+    def child_span(name, serialized_trace, &block)
+      Honeycomb.start_span(name: name, serialized_trace: serialized_trace, &block)
     end
 
     def link_to_enqueuing_trace(current, serialized_trace)
@@ -36,10 +34,11 @@ module Honeykiq
 
       trace_id, parent_span_id, = TraceParser.parse(serialized_trace)
 
-      Honeycomb.libhoney.event.add(
+      Honeycomb.start_span(
+        name: 'link',
         'trace.link.trace_id': trace_id,
         'trace.link.span_id': parent_span_id,
-        'meta.span_type': 'link',
+        'meta.annotation_type': 'link',
         'trace.parent_id': current.id,
         'trace.trace_id': current.trace.id
       ).send
