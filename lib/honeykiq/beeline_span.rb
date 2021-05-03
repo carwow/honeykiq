@@ -8,8 +8,8 @@ module Honeykiq
       case tracing_mode
       when :link then link_span(name, serialized_trace, &block)
       when :child then child_span(name, serialized_trace, &block)
-      else
-        Honeycomb.start_span(name: name, &block)
+      when :child_trace then child_trace(name, serialized_trace, &block)
+      else Honeycomb.start_span(name: name, &block)
       end
     end
 
@@ -25,10 +25,6 @@ module Honeykiq
       end
     end
 
-    def child_span(name, serialized_trace, &block)
-      Honeycomb.start_span(name: name, serialized_trace: serialized_trace, &block)
-    end
-
     def link_to_enqueuing_trace(current, serialized_trace)
       return unless serialized_trace
 
@@ -42,6 +38,16 @@ module Honeykiq
         'trace.parent_id': current.id,
         'trace.trace_id': current.trace.id
       ).send
+    end
+
+    def child_span(name, serialized_trace, &block)
+      Honeycomb.start_span(name: name, serialized_trace: serialized_trace, &block)
+    end
+
+    def child_trace(name, serialized_trace, &block)
+      parent_trace_id, = TraceParser.parse(serialized_trace)
+
+      Honeycomb.start_span(name: name, 'parent.trace_id': parent_trace_id, &block)
     end
 
     if defined?(Honeycomb)
