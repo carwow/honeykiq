@@ -4,8 +4,7 @@ ruby: &ruby
 version: 2
 
 jobs:
-  bundle:
-    working_directory: ~/honeykiq
+  tests:
     docker:
       - *ruby
     steps:
@@ -20,35 +19,11 @@ jobs:
       - save_cache:
           key: bundle-{{ checksum "Gemfile.lock" }}
           paths: [~/honeykiq/vendor/bundle]
-      - persist_to_workspace:
-          root: '~'
-          paths: [honeykiq]
-
-  rubocop:
-    working_directory: ~/honeykiq
-    docker:
-      - *ruby
-    steps:
-      - attach_workspace:
-          at: '~'
       - run: bundle exec rubocop
-
-  tests:
-    working_directory: ~/honeykiq
-    docker:
-      - *ruby
-    steps:
-      - attach_workspace:
-          at: '~'
-      - run: |
-          bundle exec rspec
+      - run: bundle exec rspec
 
 workflows:
   version: 2
   build:
     jobs:
-      - bundle
-      - rubocop:
-          requires: [bundle]
-      - tests:
-          requires: [bundle]
+      - tests

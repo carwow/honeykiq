@@ -5,3 +5,4 @@ inherit_gem:
 AllCops:
   Exclude:
     - example/*
+    - vendor/*
