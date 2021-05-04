@@ -1,26 +1,26 @@
-ruby: &ruby
-  image: carwow/ruby-ci:2.6
-
 version: 2
-
 jobs:
   tests:
     docker:
-      - *ruby
+      - image: carwow/ruby-ci:2.6
     steps:
       - checkout
       - restore_cache:
           keys:
             - bundle-{{ checksum "Gemfile.lock" }}
             - bundle-
-      - run: |
-          bundle config --local path vendor/bundle &&
-          bundle check || bundle install --jobs=4 --retry=3
+      - run:
+          name: bundle install
+          command: |
+            bundle config --local path vendor/bundle
+            bundle config --local set frozen 'true'
+            bundle install --jobs=4 --retry=3
+            bundle clean --force
       - save_cache:
           key: bundle-{{ checksum "Gemfile.lock" }}
-          paths: [~/honeykiq/vendor/bundle]
-      - run: bundle exec rubocop
+          paths: [~/project/vendor/bundle]
       - run: bundle exec rspec
+      - run: bundle exec standardrb
 
 workflows:
   version: 2

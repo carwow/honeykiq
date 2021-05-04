@@ -1,8 +1,0 @@
-inherit_gem:
-  carwow_rubocop:
-    - default.yml
-
-AllCops:
-  Exclude:
-    - example/*
-    - vendor/*

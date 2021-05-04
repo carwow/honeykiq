@@ -1,10 +1,11 @@
-require 'honeycomb-beeline'
-require 'sidekiq/testing'
+require "honeycomb-beeline"
+require "sidekiq/testing"
 
 class TestSidekiqWorker
   include Sidekiq::Worker
 
-  def perform; end
+  def perform
+  end
 end
 
 RSpec.describe Honeykiq::ClientMiddleware do
@@ -26,11 +27,11 @@ RSpec.describe Honeykiq::ClientMiddleware do
     end
   end
 
-  context 'when within a span' do
-    it 'adds serialized_trace to the job' do
+  context "when within a span" do
+    it "adds serialized_trace to the job" do
       expected_span = nil
 
-      Honeycomb.start_span(name: 'test') do |span|
+      Honeycomb.start_span(name: "test") do |span|
         expected_span = span
 
         TestSidekiqWorker.perform_async
@@ -38,17 +39,17 @@ RSpec.describe Honeykiq::ClientMiddleware do
 
       job = TestSidekiqWorker.jobs.first
 
-      expect(job['serialized_trace']).to eq(expected_span.to_trace_header)
+      expect(job["serialized_trace"]).to eq(expected_span.to_trace_header)
     end
   end
 
-  context 'when not within a span' do
-    it 'does not set serialized_trace' do
+  context "when not within a span" do
+    it "does not set serialized_trace" do
       TestSidekiqWorker.perform_async
 
       job = TestSidekiqWorker.jobs.first
 
-      expect(job['serialized_trace']).to be_nil
+      expect(job["serialized_trace"]).to be_nil
     end
   end
 end

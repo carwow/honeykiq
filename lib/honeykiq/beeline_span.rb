@@ -6,7 +6,7 @@ module Honeykiq
 
     def call(name:, serialized_trace:, &block)
       case tracing_mode
-      when :link  then link_span(name, serialized_trace, &block)
+      when :link then link_span(name, serialized_trace, &block)
       when :child then child_span(name, serialized_trace, &block)
       else
         Honeycomb.start_span(name: name, &block)
@@ -35,10 +35,10 @@ module Honeykiq
       trace_id, parent_span_id, = TraceParser.parse(serialized_trace)
 
       Honeycomb.start_span(
-        name: 'link',
+        name: "link",
         'trace.link.trace_id': trace_id,
         'trace.link.span_id': parent_span_id,
-        'meta.annotation_type': 'link',
+        'meta.annotation_type': "link",
         'trace.parent_id': current.id,
         'trace.trace_id': current.trace.id
       ).send

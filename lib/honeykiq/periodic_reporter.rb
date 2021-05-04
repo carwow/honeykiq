@@ -1,4 +1,4 @@
-require 'sidekiq/api'
+require "sidekiq/api"
 
 module Honeykiq
   class PeriodicReporter
@@ -42,27 +42,27 @@ module Honeykiq
       redis_info = fetch_redis_info
 
       {
-        'redis.connections': redis_info['connected_clients'].to_i,
-        'redis.memory_used': redis_info['used_memory'].to_i
+        'redis.connections': redis_info["connected_clients"].to_i,
+        'redis.memory_used': redis_info["used_memory"].to_i
       }
     end
 
     def fetch_redis_info
       Sidekiq.redis do |redis|
-        redis.pipelined do
+        redis.pipelined {
           redis.info :clients
           redis.info :memory
-        end.reduce(&:merge)
+        }.reduce(&:merge)
       end
     end
 
     def send_process_event(process, &extra)
       libhoney.event.add(
         type: :process,
-        'meta.dyno': process['hostname'],
-        'meta.process_id': process['pid'],
-        'process.concurrency': process['concurrency'],
-        'process.busy': process['busy'],
+        'meta.dyno': process["hostname"],
+        'meta.process_id': process["pid"],
+        'process.concurrency': process["concurrency"],
+        'process.busy': process["busy"],
         **(extra&.call(:process, process) || {})
       ).send
     end

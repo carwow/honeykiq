@@ -1,4 +1,4 @@
-require 'sidekiq/api'
+require "sidekiq/api"
 
 module Honeykiq
   class ServerMiddleware
@@ -11,7 +11,7 @@ module Honeykiq
       job = Sidekiq::Job.new(msg, queue_name)
       queue = Sidekiq::Queue.new(queue_name)
 
-      span_builder.call(name: job.display_class, serialized_trace: msg['serialized_trace']) do |event|
+      span_builder.call(name: job.display_class, serialized_trace: msg["serialized_trace"]) do |event|
         call_with_event(event, job, queue) { yield }
       end
     end
@@ -35,8 +35,8 @@ module Honeykiq
     def call_with_event(event, job, queue)
       event.add(default_fields(job, queue))
       yield
-      event.add_field(:'job.status', 'finished')
-    rescue StandardError => error
+      event.add_field(:'job.status', "finished")
+    rescue => error
       on_error(event, error)
       raise
     ensure
@@ -55,11 +55,11 @@ module Honeykiq
     def job_fields(job)
       {
         'job.class': job.display_class,
-        'job.attempt_number': (job['retry_count'].to_i.nonzero? || 0) + 1,
+        'job.attempt_number': (job["retry_count"].to_i.nonzero? || 0) + 1,
         'job.id': job.jid,
         'job.arguments_bytes': job.args.to_json.bytesize,
         'job.latency_sec': job.latency,
-        'job.batch_id': job['bid']
+        'job.batch_id': job["bid"]
       }.compact
     end
 
@@ -73,7 +73,7 @@ module Honeykiq
     def on_error(event, error)
       return unless event
 
-      event.add_field(:'job.status', 'failed')
+      event.add_field(:'job.status', "failed")
       return unless libhoney?
 
       event.add(

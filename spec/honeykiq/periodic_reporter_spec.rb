@@ -1,4 +1,4 @@
-require 'libhoney'
+require "libhoney"
 
 RSpec.describe Honeykiq::PeriodicReporter do
   let(:reporter) { described_class.new(libhoney: libhoney) }
@@ -11,15 +11,14 @@ RSpec.describe Honeykiq::PeriodicReporter do
       enqueued: 1000,
       scheduled_size: 2000,
       retry_size: 33,
-      dead_size: 22
-    )
+      dead_size: 22)
   end
 
-  let(:redis_info) { { 'connected_clients' => '5', 'used_memory' => '123' } }
+  let(:redis_info) { {"connected_clients" => "5", "used_memory" => "123"} }
   let(:processes) { [process] }
-  let(:process) { { 'hostname' => 'sla_worker.1', 'pid' => 4, 'concurrency' => 10, 'busy' => 5 } }
+  let(:process) { {"hostname" => "sla_worker.1", "pid" => 4, "concurrency" => 10, "busy" => 5} }
   let(:queues) { [queue] }
-  let(:queue) { instance_double('Sidekiq::Queue', name: SecureRandom.uuid, latency: 1.0, size: 10) }
+  let(:queue) { instance_double("Sidekiq::Queue", name: SecureRandom.uuid, latency: 1.0, size: 10) }
 
   let(:expected_instance_event) do
     {
@@ -30,18 +29,18 @@ RSpec.describe Honeykiq::PeriodicReporter do
       'instance.scheduled': stats.scheduled_size,
       'instance.retries': stats.retry_size,
       'instance.dead': stats.dead_size,
-      'redis.connections': redis_info['connected_clients'].to_i,
-      'redis.memory_used': redis_info['used_memory'].to_i
+      'redis.connections': redis_info["connected_clients"].to_i,
+      'redis.memory_used': redis_info["used_memory"].to_i
     }
   end
 
   let(:expected_process_event) do
     {
       type: :process,
-      'meta.dyno': process['hostname'],
-      'meta.process_id': process['pid'],
-      'process.concurrency': process['concurrency'],
-      'process.busy': process['busy']
+      'meta.dyno': process["hostname"],
+      'meta.process_id': process["pid"],
+      'process.concurrency': process["concurrency"],
+      'process.busy': process["busy"]
     }
   end
 
@@ -61,41 +60,41 @@ RSpec.describe Honeykiq::PeriodicReporter do
     allow(Sidekiq::Queue).to receive(:all).and_return(queues)
   end
 
-  it '#report for instance' do
+  it "#report for instance" do
     reporter.report
 
     expect(libhoney.events.first.data).to eq(expected_instance_event)
   end
 
-  it '#report for process' do
+  it "#report for process" do
     reporter.report
 
     expect(libhoney.events.drop(1).first.data).to eq(expected_process_event)
   end
 
-  it '#report for queue' do
+  it "#report for queue" do
     reporter.report
 
     expect(libhoney.events.drop(2).first.data).to eq(expected_queue_event)
   end
 
-  context 'with extra fields' do
-    it '#report for instance' do
-      reporter.report { |type| { extra: 'cool' } if type == :instance }
+  context "with extra fields" do
+    it "#report for instance" do
+      reporter.report { |type| {extra: "cool"} if type == :instance }
 
       expect(libhoney.events.first.data)
-        .to eq(expected_instance_event.merge(extra: 'cool'))
+        .to eq(expected_instance_event.merge(extra: "cool"))
     end
 
-    it '#report for process' do
-      reporter.report { |type, process| { extra: process['hostname'] } if type == :process }
+    it "#report for process" do
+      reporter.report { |type, process| {extra: process["hostname"]} if type == :process }
 
       expect(libhoney.events.drop(1).first.data)
-        .to eq(expected_process_event.merge(extra: process['hostname']))
+        .to eq(expected_process_event.merge(extra: process["hostname"]))
     end
 
-    it '#report for queue' do
-      reporter.report { |type, queue| { extra: queue.name } if type == :queue }
+    it "#report for queue" do
+      reporter.report { |type, queue| {extra: queue.name} if type == :queue }
 
       expect(libhoney.events.drop(2).first.data)
         .to eq(expected_queue_event.merge(extra: queue.name))
