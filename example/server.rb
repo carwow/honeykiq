@@ -27,6 +27,10 @@ Sidekiq.configure_server do |config|
     # - :child starts a span as a child of the enqueuing trace,
     #   requires ClientMiddleware to be configured when enqueuing the job.
     #
+    # - :child_trace (experimental) starts a span and a trace
+    #   with trace.parent_id set to the enqueuing trace id,
+    #   requires ClientMiddleware to be configured when enqueuing the job.
+    #
     # - :link (experimental) starts a span and trace
     #   with a link event that points to the enqueuing trace,
     #   requires ClientMiddleware to be configured when enqueuing the job.
