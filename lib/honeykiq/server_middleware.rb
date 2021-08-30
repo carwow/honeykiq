@@ -2,9 +2,9 @@ require "sidekiq/api"
 
 module Honeykiq
   class ServerMiddleware
-    def initialize(libhoney: nil, honey_client: nil, tracing_mode: nil)
-      @libhoney = libhoney || honey_client
-      @tracing_mode = tracing_mode
+    def initialize(options = {})
+      @libhoney = options[:libhoney] || options[:honey_client]
+      @tracing_mode = options[:tracing_mode]
     end
 
     def call(_worker, msg, queue_name)
