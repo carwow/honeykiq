@@ -8,7 +8,7 @@ module Honeykiq
     end
 
     def call(_worker, msg, queue_name)
-      job = Sidekiq::Job.new(msg, queue_name)
+      job = Sidekiq::JobRecord.new(msg, queue_name)
       queue = Sidekiq::Queue.new(queue_name)
 
       span_builder.call(name: job.display_class, serialized_trace: msg["serialized_trace"]) do |event|
