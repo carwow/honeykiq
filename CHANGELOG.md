@@ -5,7 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.4.0]
+### Added
+- Support for `:child_trace` mode (#19)
+
 ### Fixed
+- Support sidekiq v6.2.2 (#23)
 - Link events respect beeline sampling (#17)
   WARNING: This is technically a breaking change since it now sends
   `meta.annotation_type` field instead of `meta.span_type` for the link event,
