@@ -1,29 +1,23 @@
-version: 2
+version: 2.1
+
 jobs:
-  tests:
+  test:
+    parameters:
+      ruby:
+        type: string
     docker:
-      - image: carwow/ruby-ci:2.6
+      - image: 'cimg/ruby:<< parameters.ruby >>'
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - bundle-{{ checksum "Gemfile.lock" }}
-            - bundle-
-      - run:
-          name: bundle install
-          command: |
-            bundle config --local path vendor/bundle
-            bundle config --local set frozen 'true'
-            bundle install --jobs=4 --retry=3
-            bundle clean --force
-      - save_cache:
-          key: bundle-{{ checksum "Gemfile.lock" }}
-          paths: [~/project/vendor/bundle]
+      - run: bundle install
       - run: bundle exec rspec
       - run: bundle exec standardrb
 
 workflows:
   version: 2
-  build:
+  test:
     jobs:
-      - tests
+      - test:
+          matrix:
+            parameters:
+              ruby: ["2.7", "2.6"]

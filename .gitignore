@@ -4,8 +4,7 @@
 /coverage/
 /doc/
 /pkg/
+/spec/examples.txt
 /spec/reports/
 /tmp/
-
-# rspec failure tracking
-spec/examples.txt
+/Gemfile.lock
