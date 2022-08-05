@@ -19,6 +19,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "sidekiq", "~> 6.2", ">= 6.2.2"
 
+  spec.add_development_dependency "concurrent-ruby"
   spec.add_development_dependency "honeycomb-beeline", "~> 2.6"
   spec.add_development_dependency "pry", "~> 0.14"
   spec.add_development_dependency "rake", "~> 13.0"
