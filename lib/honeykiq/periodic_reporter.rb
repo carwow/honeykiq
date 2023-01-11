@@ -49,11 +49,21 @@ module Honeykiq
 
     def fetch_redis_info
       Sidekiq.redis do |redis|
-        redis.pipelined {
-          redis.info :clients
-          redis.info :memory
-        }.reduce(&:merge)
+        redis.pipelined { |redis|
+          redis.call "INFO", "clients"
+          redis.call "INFO", "memory"
+        }
+          .map(&method(:hashify_info))
+          .reduce(&:merge)
       end
+    end
+
+    def hashify_info(reply)
+      # based on: https://github.com/redis/redis-rb/blob/master/lib/redis/commands.rb
+      lines = reply.split("\r\n").grep_v(/^(#|$)/)
+      lines.map! { |line| line.split(":", 2) }
+      lines.compact!
+      lines.to_h
     end
 
     def send_process_event(process, &extra)

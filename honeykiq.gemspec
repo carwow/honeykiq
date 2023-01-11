@@ -17,9 +17,9 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ["lib"]
 
-  spec.required_ruby_version = ">= 2.6"
+  spec.required_ruby_version = ">= 2.7"
 
-  spec.add_dependency "sidekiq", "~> 6.2", ">= 6.2.2"
+  spec.add_dependency "sidekiq", ">= 6.2.2", "<8"
 
   spec.add_development_dependency "honeycomb-beeline", "~> 2"
   spec.add_development_dependency "pry", "~> 0.14"
