@@ -32,11 +32,11 @@ module Honeykiq
 
       Honeycomb.start_span(
         name: "link",
-        'trace.link.trace_id': trace_id,
-        'trace.link.span_id': parent_span_id,
-        'meta.annotation_type': "link",
-        'trace.parent_id': current.id,
-        'trace.trace_id': current.trace.id
+        "trace.link.trace_id": trace_id,
+        "trace.link.span_id": parent_span_id,
+        "meta.annotation_type": "link",
+        "trace.parent_id": current.id,
+        "trace.trace_id": current.trace.id
       ).send
     end
 
@@ -47,7 +47,7 @@ module Honeykiq
     def child_trace(name, serialized_trace, &block)
       parent_trace_id, = TraceParser.parse(serialized_trace)
 
-      Honeycomb.start_span(name: name, 'parent.trace_id': parent_trace_id, &block)
+      Honeycomb.start_span(name: name, "parent.trace_id": parent_trace_id, &block)
     end
 
     if defined?(Honeycomb)

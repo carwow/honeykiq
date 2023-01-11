@@ -19,7 +19,7 @@ end
 
 class TestExtraJobFields < Honeykiq::ServerMiddleware
   def extra_fields(job)
-    {'job.arguments': job.args}
+    {"job.arguments": job.args}
   end
 end
 
@@ -30,22 +30,22 @@ RSpec.describe Honeykiq::ServerMiddleware do
   let(:base_event) do
     {
       type: :job,
-      'meta.thread_id': instance_of(Integer),
-      'job.class': TestSidekiqWorker.to_s,
-      'job.attempt_number': 1,
-      'job.id': instance_of(String),
-      'job.arguments_bytes': instance_of(Integer),
-      'job.latency_sec': be_within(0.5).of(0),
-      'job.status': "finished",
-      'queue.name': "default",
-      'queue.size': be_between(0, 100)
+      "meta.thread_id": instance_of(Integer),
+      "job.class": TestSidekiqWorker.to_s,
+      "job.attempt_number": 1,
+      "job.id": instance_of(String),
+      "job.arguments_bytes": instance_of(Integer),
+      "job.latency_sec": be_within(0.5).of(0),
+      "job.status": "finished",
+      "queue.name": "default",
+      "queue.size": be_between(0, 100)
     }
   end
   let(:expected_keys) { expected_event.keys }
   let(:expected_error_info) do
     {
-      'error.class': TestSidekiqWorker::Error.to_s,
-      'error.message': "BOOM"
+      "error.class": TestSidekiqWorker::Error.to_s,
+      "error.message": "BOOM"
     }
   end
 
@@ -86,7 +86,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
       let(:job_arguments) { {"arg_1" => true, "arg_2" => true} }
       let(:expected_user_event) do
         expected_event.merge(
-          'job.arguments': [job_arguments]
+          "job.arguments": [job_arguments]
         )
       end
 
@@ -100,8 +100,8 @@ RSpec.describe Honeykiq::ServerMiddleware do
     context "on error" do
       let(:expected_event_for_error) do
         expected_event.merge(
-          'job.arguments_bytes': instance_of(Integer),
-          'job.status': "failed"
+          "job.arguments_bytes": instance_of(Integer),
+          "job.status": "failed"
         ).merge(expected_error_info)
       end
 
@@ -151,7 +151,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
         TestSidekiqWorker.jobs.first["bid"] = "123"
         TestSidekiqWorker.drain
 
-        expect(libhoney.events.first.data).to include('job.batch_id': "123")
+        expect(libhoney.events.first.data).to include("job.batch_id": "123")
       end
     end
 
@@ -163,7 +163,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
         TestSidekiqWorker.jobs.first["retry_count"] = 4
         TestSidekiqWorker.drain
 
-        expect(libhoney.events.first.data).to include('job.attempt_number': 5)
+        expect(libhoney.events.first.data).to include("job.attempt_number": 5)
       end
     end
   end
@@ -256,8 +256,8 @@ RSpec.describe Honeykiq::ServerMiddleware do
         parent_span = enqueue
 
         expect(libhoney.events.first.data).not_to include(
-          'trace.parent_id': parent_span.id,
-          'trace.trace_id': parent_span.trace.id
+          "trace.parent_id": parent_span.id,
+          "trace.trace_id": parent_span.trace.id
         )
       end
     end
@@ -275,11 +275,11 @@ RSpec.describe Honeykiq::ServerMiddleware do
         parent_span = enqueue
 
         expect(libhoney.events.first.data).to include(
-          'trace.link.trace_id': parent_span.trace.id,
-          'trace.link.span_id': parent_span.id,
-          'meta.annotation_type': "link",
-          'trace.parent_id': kind_of(String),
-          'trace.trace_id': kind_of(String)
+          "trace.link.trace_id": parent_span.trace.id,
+          "trace.link.span_id": parent_span.id,
+          "meta.annotation_type": "link",
+          "trace.parent_id": kind_of(String),
+          "trace.trace_id": kind_of(String)
         )
       end
     end

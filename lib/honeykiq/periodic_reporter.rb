@@ -29,12 +29,12 @@ module Honeykiq
       stats = Sidekiq::Stats.new
 
       {
-        'instance.processes': stats.processes_size,
-        'instance.busy': stats.workers_size,
-        'instance.enqueued': stats.enqueued,
-        'instance.scheduled': stats.scheduled_size,
-        'instance.retries': stats.retry_size,
-        'instance.dead': stats.dead_size
+        "instance.processes": stats.processes_size,
+        "instance.busy": stats.workers_size,
+        "instance.enqueued": stats.enqueued,
+        "instance.scheduled": stats.scheduled_size,
+        "instance.retries": stats.retry_size,
+        "instance.dead": stats.dead_size
       }
     end
 
@@ -42,8 +42,8 @@ module Honeykiq
       redis_info = fetch_redis_info
 
       {
-        'redis.connections': redis_info["connected_clients"].to_i,
-        'redis.memory_used': redis_info["used_memory"].to_i
+        "redis.connections": redis_info["connected_clients"].to_i,
+        "redis.memory_used": redis_info["used_memory"].to_i
       }
     end
 
@@ -59,10 +59,10 @@ module Honeykiq
     def send_process_event(process, &extra)
       libhoney.event.add(
         type: :process,
-        'meta.dyno': process["hostname"],
-        'meta.process_id': process["pid"],
-        'process.concurrency': process["concurrency"],
-        'process.busy': process["busy"],
+        "meta.dyno": process["hostname"],
+        "meta.process_id": process["pid"],
+        "process.concurrency": process["concurrency"],
+        "process.busy": process["busy"],
         **(extra&.call(:process, process) || {})
       ).send
     end
@@ -70,9 +70,9 @@ module Honeykiq
     def send_queue_event(queue, &extra)
       libhoney.event.add(
         type: :queue,
-        'queue.name': queue.name,
-        'queue.latency_sec': queue.latency.to_f,
-        'queue.size': queue.size,
+        "queue.name": queue.name,
+        "queue.latency_sec": queue.latency.to_f,
+        "queue.size": queue.size,
         **(extra&.call(:queue, queue) || {})
       ).send
     end

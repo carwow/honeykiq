@@ -35,7 +35,7 @@ module Honeykiq
     def call_with_event(event, job, queue)
       event.add(default_fields(job, queue))
       yield
-      event.add_field(:'job.status', "finished")
+      event.add_field(:"job.status", "finished")
     rescue => error
       on_error(event, error)
       raise
@@ -48,37 +48,37 @@ module Honeykiq
         type: :job,
         **job_fields(job),
         **queue_fields(queue),
-        'meta.thread_id': Thread.current.object_id
+        "meta.thread_id": Thread.current.object_id
       }
     end
 
     def job_fields(job)
       {
-        'job.class': job.display_class,
-        'job.attempt_number': (job["retry_count"].to_i.nonzero? || 0) + 1,
-        'job.id': job.jid,
-        'job.arguments_bytes': job.args.to_json.bytesize,
-        'job.latency_sec': job.latency,
-        'job.batch_id': job["bid"]
+        "job.class": job.display_class,
+        "job.attempt_number": (job["retry_count"].to_i.nonzero? || 0) + 1,
+        "job.id": job.jid,
+        "job.arguments_bytes": job.args.to_json.bytesize,
+        "job.latency_sec": job.latency,
+        "job.batch_id": job["bid"]
       }.compact
     end
 
     def queue_fields(queue)
       {
-        'queue.name': queue.name,
-        'queue.size': queue.size
+        "queue.name": queue.name,
+        "queue.size": queue.size
       }
     end
 
     def on_error(event, error)
       return unless event
 
-      event.add_field(:'job.status', "failed")
+      event.add_field(:"job.status", "failed")
       return unless libhoney?
 
       event.add(
-        'error.class': error.class.name,
-        'error.message': error.message
+        "error.class": error.class.name,
+        "error.message": error.message
       )
     end
 

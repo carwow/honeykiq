@@ -23,33 +23,33 @@ RSpec.describe Honeykiq::PeriodicReporter do
   let(:expected_instance_event) do
     {
       type: :instance,
-      'instance.processes': stats.processes_size,
-      'instance.busy': stats.workers_size,
-      'instance.enqueued': stats.enqueued,
-      'instance.scheduled': stats.scheduled_size,
-      'instance.retries': stats.retry_size,
-      'instance.dead': stats.dead_size,
-      'redis.connections': redis_info["connected_clients"].to_i,
-      'redis.memory_used': redis_info["used_memory"].to_i
+      "instance.processes": stats.processes_size,
+      "instance.busy": stats.workers_size,
+      "instance.enqueued": stats.enqueued,
+      "instance.scheduled": stats.scheduled_size,
+      "instance.retries": stats.retry_size,
+      "instance.dead": stats.dead_size,
+      "redis.connections": redis_info["connected_clients"].to_i,
+      "redis.memory_used": redis_info["used_memory"].to_i
     }
   end
 
   let(:expected_process_event) do
     {
       type: :process,
-      'meta.dyno': process["hostname"],
-      'meta.process_id': process["pid"],
-      'process.concurrency': process["concurrency"],
-      'process.busy': process["busy"]
+      "meta.dyno": process["hostname"],
+      "meta.process_id": process["pid"],
+      "process.concurrency": process["concurrency"],
+      "process.busy": process["busy"]
     }
   end
 
   let(:expected_queue_event) do
     {
       type: :queue,
-      'queue.name': queue.name,
-      'queue.latency_sec': queue.latency,
-      'queue.size': queue.size
+      "queue.name": queue.name,
+      "queue.latency_sec": queue.latency,
+      "queue.size": queue.size
     }
   end
 
