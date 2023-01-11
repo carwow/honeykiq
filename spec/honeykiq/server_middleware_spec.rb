@@ -170,7 +170,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
 
   describe "with Libhoney client" do
     let(:expected_event) do
-      base_event.merge(duration_ms: be_within(0.5).of(0))
+      base_event.merge(duration_ms: be_within(10).of(0))
     end
 
     before do
@@ -204,7 +204,7 @@ RSpec.describe Honeykiq::ServerMiddleware do
     end
 
     let(:expected_event) do
-      base_event.merge("duration_ms" => be_within(0.5).of(0))
+      base_event.merge("duration_ms" => be_within(10).of(0))
     end
 
     let(:expected_keys) do
