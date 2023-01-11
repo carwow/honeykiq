@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1]
+### Added
+- Add Ruby 3.2 to CI
+- Add `required_ruby_version` >= 2.6 to gemspec
+
 ## [1.5.0]
 ### Added
 - Support ruby v3
